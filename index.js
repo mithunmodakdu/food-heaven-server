@@ -30,11 +30,19 @@ async function run() {
     await client.connect();
 
     const menuCollection = client.db("foodHeavenDB").collection("menu");
+    const reviewsCollection = client.db("foodHeavenDB").collection("reviews");
     
     app.get('/menu', async(req, res)=>{
       const result = await menuCollection.find().toArray();
       res.send(result);
+    });
+
+    app.get('/reviews', async(req, res)=>{
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
     })
+
+    
 
 
 
