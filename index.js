@@ -26,23 +26,31 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const usersCollection = client.db("foodHeavenDB").collection("users");
     const menuCollection = client.db("foodHeavenDB").collection("menu");
     const reviewsCollection = client.db("foodHeavenDB").collection("reviews");
     const cartsCollection = client.db("foodHeavenDB").collection("carts");
     
-    // :::: menu :::::
+    // :::: users related endpoints :::::
+    app.post('/users', async(req, res)=>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    })
+
+    // :::: menu related endpoint :::::
     app.get('/menu', async(req, res)=>{
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
 
-    // :::: reviews :::::
+    // :::: reviews related endpoint :::::
     app.get('/reviews', async(req, res)=>{
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     })
 
-    // ::::: carts ::::
+    // ::::: carts related endpoints ::::
     app.get('/carts', async(req, res)=>{
       const email = req.query.email;
       const query = {email: email}
