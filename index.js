@@ -31,9 +31,18 @@ async function run() {
     const menuCollection = client.db("foodHeavenDB").collection("menu");
     const reviewsCollection = client.db("foodHeavenDB").collection("reviews");
     const cartsCollection = client.db("foodHeavenDB").collection("carts");
+
+    // :::: jwt related endpoints or api :::::
+    app.post('/jwt', async(req, res)=>{
+      const userEmail = req.body;
+      console.log(userEmail)
+      const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+      res.send({token});
+    })
     
     // :::: users related endpoints :::::
     app.get('/users', async(req, res)=>{
+      console.log(req.headers)
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
