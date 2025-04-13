@@ -41,12 +41,21 @@ async function run() {
 
     // ::::middleware ::::
     const verifyToken = (req, res, next) =>{
-      console.log('inside varifyToken', req.headers);
+      console.log('inside varifyToken', req.headers.authorization);
       if(!req.headers.authorization){
-        return res.status(401).send({message: 'unauthorized'})
+        return res.status(401).send({message: 'unauthorized access'})
       }
       const token = req.headers.authorization.split(' ')[1];
-      // next();
+
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+        if(err){
+          return res.status(401).send({message: 'unauthorized access'});
+        }
+        req.decoded = decoded;
+        next();
+
+      });
+
     }
     
     // :::: users related endpoints :::::
