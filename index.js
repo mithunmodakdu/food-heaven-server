@@ -41,7 +41,7 @@ async function run() {
 
     // ::::middleware ::::
     const verifyToken = (req, res, next) =>{
-      console.log('inside varifyToken', req.headers.authorization);
+      // console.log('inside varifyToken', req.headers.authorization);
       if(!req.headers.authorization){
         return res.status(401).send({message: 'unauthorized access'})
       }
@@ -53,19 +53,28 @@ async function run() {
         }
         req.decoded = decoded;
         next();
-
       });
+    }
 
+    const verifyAdmin = async(req, res, next) =>{
+      const email = req.decoded.email;
+      const query = {email: email};
+      const user = await usersCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'access is forbidden'});
+      }
+      next();
     }
     
     // :::: users related endpoints :::::
-    app.get('/users', verifyToken, async(req, res)=>{
+    app.get('/users', verifyToken, verifyAdmin, async(req, res)=>{
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
 
     // created endpoint or api to check whether user is admin or not
-    app.get('/user/admin/:email',verifyToken, async(req, res)=>{
+    app.get('/users/admin/:email', verifyToken, async(req, res)=>{
       const email = req.params.email;
       if(email !== req.decoded.email){
           res.status(403).send({message: 'access is forbidden'});
@@ -86,13 +95,12 @@ async function run() {
       // insert user if email does not exist in database
       const query = {email: user.email}
       const existingUser = await usersCollection.findOne(query);
+      // console.log(existingUser)
       if(existingUser){
         res.send({message: "user already existed", insertedId: null});
       }
       const result = await usersCollection.insertOne(user);
       res.send(result);
-
-      
     })
 
     app.delete('/users/:id', async(req, res)=>{
