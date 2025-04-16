@@ -64,6 +64,22 @@ async function run() {
       res.send(result);
     })
 
+    // created endpoint or api to check whether user is admin or not
+    app.get('/user/admin/:email',verifyToken, async(req, res)=>{
+      const email = req.params.email;
+      if(email !== req.decoded.email){
+          res.status(403).send({message: 'access is forbidden'});
+      }
+
+      const query = {email: email};
+      const user = await usersCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin';
+      }
+      res.send({admin});
+    })
+
     app.post('/users', async(req, res)=>{
       const user = req.body;
 
