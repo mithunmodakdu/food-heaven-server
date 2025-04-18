@@ -135,6 +135,14 @@ async function run() {
       res.send(result);
     })
 
+    app.delete('/menu/:id', verifyToken, verifyAdmin, async(req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.deleteOne(query);
+      res.send(result);
+    })
+
     // :::: reviews related endpoint :::::
     app.get('/reviews', async(req, res)=>{
       const result = await reviewsCollection.find().toArray();
