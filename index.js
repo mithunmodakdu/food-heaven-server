@@ -226,9 +226,18 @@ async function run() {
         $in: payment.cartIds.map(cartId => new ObjectId(cartId))
       }}
       console.log(query)
-      
+
       const deleteResult = await cartsCollection.deleteMany(query);
       res.send({paymentResult, deleteResult});
+    })
+
+    app.get('/payments/:email', verifyToken, async(req, res) =>{
+      const query = {email: req.params.email};
+      if(req.params.email !== req.decoded.email){
+        res.status(403).send({message: 'Access is forbidden'});
+      }
+      const res = await paymentsCollection.find(query).toArray();
+      res.send(res);
     })
 
     
