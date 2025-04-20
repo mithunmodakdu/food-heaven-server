@@ -32,6 +32,7 @@ async function run() {
     const menuCollection = client.db("foodHeavenDB").collection("menu");
     const reviewsCollection = client.db("foodHeavenDB").collection("reviews");
     const cartsCollection = client.db("foodHeavenDB").collection("carts");
+    const paymentsCollection = client.db("foodHeavenDB").collection("payments");
 
     // :::: jwt related endpoints or api :::::
     app.post('/jwt', async(req, res)=>{
@@ -212,6 +213,22 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret
       })
+    })
+
+    // ::::::: payment related api ::::::::
+    app.post('/payments', async(req, res) =>{
+      const payment = req.body;
+      console.log('payment info', payment)
+      const paymentResult = await paymentsCollection.insertOne(payment);
+      
+      const query = {_id: {
+        // 'ObjectId' of 'ObjectId' is deprecated but it is working
+        $in: payment.cartIds.map(cartId => new ObjectId(cartId))
+      }}
+      console.log(query)
+      
+      const deleteResult = await cartsCollection.deleteMany(query);
+      res.send({paymentResult, deleteResult});
     })
 
     
