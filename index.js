@@ -233,11 +233,26 @@ async function run() {
 
     app.get('/payments/:email', verifyToken, async(req, res) =>{
       const query = {email: req.params.email};
+      // console.log(query)
+
       if(req.params.email !== req.decoded.email){
         res.status(403).send({message: 'Access is forbidden'});
       }
-      const res = await paymentsCollection.find(query).toArray();
-      res.send(res);
+      const result = await paymentsCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    // ::::::: stats api ::::::::
+    app.get('/admin-stats', async(req, res) =>{
+      const users = await usersCollection.estimatedDocumentCount();
+      const menuItems = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentsCollection.estimatedDocumentCount();
+
+      // not best way
+      const payments = await paymentsCollection.find().toArray();
+      const revenue = payments.reduce((total, item) => total + item.price, 0);
+
+      res.send({users, menuItems, orders, revenue});
     })
 
     
