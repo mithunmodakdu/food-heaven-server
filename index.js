@@ -265,6 +265,56 @@ async function run() {
       res.send({users, menuItems, orders, revenue});
     })
 
+    app.get('/order-stats', async(req, res) =>{
+      const result = await paymentsCollection.aggregate([
+        // for converting menuItemIds into ObjectId
+        {
+          $addFields: {
+            menuItemIds: {
+              $map: {
+                input: '$menuItemIds',
+                as: 'id',
+                in: {$toObjectId: '$$id'}
+              }
+            }
+          }
+        },
+
+        // unwind menuItemIds
+        {
+          $unwind: '$menuItemIds'
+        },
+        
+        // lookup menuItemIds field of payments with _id field of menu
+        {
+          $lookup: {
+            from: 'menu',
+            localField: 'menuItemIds',
+            foreignField: '_id',
+            as: 'menuItems'
+          }
+        },
+
+        // unwind menuItems
+        {
+          $unwind: '$menuItems'
+        },
+
+        // group
+        {
+          $group: {
+            _id: '$menuItems.category',
+            quantity: { $sum: 1 },
+            revenue: { $sum: '$menuItems.price'}
+          }
+        }
+        
+      ]).toArray();
+      res.send(result);
+    })
+
+  
+
     
 
 
