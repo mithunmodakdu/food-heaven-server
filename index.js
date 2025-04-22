@@ -267,7 +267,7 @@ async function run() {
 
     app.get('/order-stats', async(req, res) =>{
       const result = await paymentsCollection.aggregate([
-        // for converting menuItemIds into ObjectId
+        // for converting menuItemIds string into ObjectId
         {
           $addFields: {
             menuItemIds: {
@@ -300,12 +300,22 @@ async function run() {
           $unwind: '$menuItems'
         },
 
-        // group
+        //use group to get _id: categoryName , quantity: documents number, revenue: totalPrice
         {
           $group: {
             _id: '$menuItems.category',
             quantity: { $sum: 1 },
             revenue: { $sum: '$menuItems.price'}
+          }
+        },
+
+        //use project to replace _id fieldName with category fieldName
+        {
+          $project: {
+            _id: 0,
+            category: '$_id',
+            quantity: '$quantity',
+            revenue: '$revenue'
           }
         }
         
