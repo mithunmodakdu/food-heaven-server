@@ -5,6 +5,13 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const formData = require('form-data');
+const Mailgun = require('mailgun.js');
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({
+  username: 'api',
+  key: process.env.MAIL_GUN_API_KEY
+});
 
 // middleware
 app.use(cors());
@@ -225,9 +232,26 @@ async function run() {
         // 'ObjectId' of 'ObjectId' is deprecated but it is working
         $in: payment.cartIds.map(cartId => new ObjectId(cartId))
       }}
-      console.log(query)
-
+      // console.log(query)
       const deleteResult = await cartsCollection.deleteMany(query);
+
+      // send email for payment confirmation
+      mg.messages.create(process.env.MAIL_GUN_SENDING_DOMAIN, {
+        from: "Mailgun Sandbox<postmaster@sandbox320f002322c341aeba58e89d84b562d7.mailgun.org>",
+        to: ['mithunmodakdu@gmail.com'],
+        subject: 'payment confirmation',
+        text: 'Your order has been confirmed',
+        html: `
+        <div>
+          <h2>Thank you for your payment.</h2>
+          <h4>Your transaction id: <strong>${payment.transactionId}</strong></h4>
+          <p>we would like to  get your feedback about the food.</p>
+        </div>
+        `
+      })
+      .then(msg => console.log(msg))
+      .catch(error => console.log(error))
+
       res.send({paymentResult, deleteResult});
     })
 
